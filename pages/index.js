@@ -15,31 +15,8 @@ export default function Home() {
   };
 
   useEffect(() => {
-  const checkRedirect = async () => {
-    const res = await fetch("/api/links");
-    const data = await res.json();
-
-    // Look for title === "redirect"
-    const redirectItem = data.find(item => item.title.toLowerCase() === "redirect");
-
-    if (redirectItem) {
-      let target = redirectItem.url;
-
-      // Ensure valid http/https
-      if (!/^https?:\/\//i.test(target)) {
-        target = "https://" + target;
-      }
-
-      window.location.href = target; // 🔥 full-page redirect
-      return;
-    }
-
-    setLinks(data); // Only set links if not redirecting
-  };
-
-  checkRedirect();
+  fetchLinks();
 }, []);
-
   const addLink = async (e) => {
     e.preventDefault();
     if (!title || !url) return;
