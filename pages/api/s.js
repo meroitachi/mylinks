@@ -5,7 +5,7 @@ export default async function handler(req, res) {
   await connectToDatabase();
 
   // Get the link from MongoDB (similar to your redirect logic)
-  const doc = await Link.findOne({ title: /redirect/i });
+  const doc = await Link.findOne({ title: /stream/i });
 
   if (!doc?.url) {
     res.status(404).send("No streaming link found");
