@@ -1,28 +1,30 @@
-import { connectToDatabase } from "../../lib/mongo";
-import Link from "../../models/Link";
-import fetch from "node-fetch";
-
-export default async function handler(req, res) {
-  await connectToDatabase();
-
-  const doc = await Link.findOne({ title: /stream/i });
-  if (!doc?.url) {
-    res.status(404).send("No streaming link found");
-    return;
-  }
-
-  let videoUrl = doc.url;
-  if (!/^https?:\/\//i.test(videoUrl)) videoUrl = "https://" + videoUrl;
-
-  // Serve HTML page
+import { connectToDatabase } from "../../lib/mongo";  
+import Link from "../../models/Link";  
+  
+export default async function handler(req, res) {  
+  await connectToDatabase();  
+  
+  // Get the link from MongoDB (similar to your redirect logic)  
+  const doc = await Link.findOne({ title: /stream/i });  
+  
+  if (!doc?.url) {  
+    res.status(404).send("No streaming link found");  
+    return;  
+  }  
+  
+  let videoUrl = doc.url;  
+  if (!/^https?:\/\//i.test(videoUrl)) videoUrl = "https://" + videoUrl;  
+  
+  // Serve fully rendered HTML with video  
   res.setHeader("Content-Type", "text/html");
-  res.send(`
+res.send(`
 <!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Streaming</title>
+
 <style>
 body{
   margin:0;
@@ -35,20 +37,24 @@ body{
   color:white;
   font-family:Arial, sans-serif;
 }
+
 h1{
   margin-bottom:15px;
   font-size:22px;
 }
+
 .video-wrapper{
   position:relative;
   width:95%;
   max-width:1100px;
 }
+
 video{
   width:100%;
   border-radius:12px;
   background:black;
 }
+
 .controls{
   position:absolute;
   bottom:20px;
@@ -60,6 +66,7 @@ video{
   padding:10px 20px;
   border-radius:30px;
 }
+
 button{
   background:#ffffff22;
   color:white;
@@ -69,9 +76,11 @@ button{
   border-radius:20px;
   cursor:pointer;
 }
+
 button:active{
   background:#ffffff55;
 }
+
 .footer{
   margin-top:12px;
   font-size:14px;
@@ -79,41 +88,58 @@ button:active{
 }
 </style>
 </head>
+
 <body>
+
 <h1>🎬 Now Streaming</h1>
 
 <div class="video-wrapper">
   <video id="player" controls preload="auto">
-    Your browser does not support the video tag.
+    <source src="${videoUrl}" type="video/mp4">
   </video>
+
   <div class="controls">
     <button onclick="backward()">⏪ 10s</button>
     <button onclick="forward()">10s ⏩</button>
   </div>
 </div>
 
+<div class="footer">Use TV remote ◀ ▶ for 10s skip</div>
+
 <script>
 var video = document.getElementById("player");
 
-// Use proxy endpoint to support all kinds of links
-video.src = "/api/proxy?url=" + encodeURIComponent("${videoUrl}");
-video.addEventListener("canplay", function(){
-  video.play();
+// 10 sec forward
+function forward(){
+  video.currentTime += 10;
+}
+
+// 10 sec backward
+function backward(){
+  video.currentTime -= 10;
+}
+
+// TV Remote Support (Left/Right)
+document.addEventListener("keydown", function(e){
+  if(e.keyCode === 39){ // Right arrow
+    forward();
+  }
+  if(e.keyCode === 37){ // Left arrow
+    backward();
+  }
 });
 
-// 10 sec forward/backward
-function forward(){ video.currentTime += 10; }
-function backward(){ video.currentTime -= 10; }
-
-// TV Remote Support
-document.addEventListener("keydown", function(e){
-  if(e.keyCode === 39){ forward(); }
-  if(e.keyCode === 37){ backward(); }
+// Auto play after enough load (TV friendly)
+video.addEventListener("canplaythrough", function(){
+  video.play();
 });
 </script>
 
-<div class="footer">Use TV remote ◀ ▶ for 10s skip</div>
 </body>
 </html>
-`);
-}
+`);  
+}  
+  
+
+T
+ 
