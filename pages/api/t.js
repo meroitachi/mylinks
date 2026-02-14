@@ -1,6 +1,5 @@
 import { connectToDatabase } from "../../lib/mongo";
 import Link from "../../models/Link";
-import fetch from "node-fetch";
 
 export default async function handler(req, res) {
   await connectToDatabase();
@@ -17,103 +16,48 @@ export default async function handler(req, res) {
   // Serve HTML page
   res.setHeader("Content-Type", "text/html");
   res.send(`
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Streaming</title>
-<style>
-body{
-  margin:0;
-  background:#000;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  height:100vh;
-  color:white;
-  font-family:Arial, sans-serif;
-}
-h1{
-  margin-bottom:15px;
-  font-size:22px;
-}
-.video-wrapper{
-  position:relative;
-  width:95%;
-  max-width:1100px;
-}
-video{
-  width:100%;
-  border-radius:12px;
-  background:black;
-}
-.controls{
-  position:absolute;
-  bottom:20px;
-  left:50%;
-  transform:translateX(-50%);
-  display:flex;
-  gap:20px;
-  background:rgba(0,0,0,0.6);
-  padding:10px 20px;
-  border-radius:30px;
-}
-button{
-  background:#ffffff22;
-  color:white;
-  border:1px solid #ffffff55;
-  padding:10px 18px;
-  font-size:18px;
-  border-radius:20px;
-  cursor:pointer;
-}
-button:active{
-  background:#ffffff55;
-}
-.footer{
-  margin-top:12px;
-  font-size:14px;
-  opacity:0.6;
-}
-</style>
-</head>
-<body>
-<h1>🎬 Now Streaming</h1>
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Streaming</title>
+      <style>
+        /* ... your CSS ... */
+      </style>
+    </head>
+    <body>
+      <h1>🎬 Now Streaming</h1>
+      <div class="video-wrapper">
+        <video id="player" controls preload="auto">
+          Your browser does not support the video tag.
+        </video>
+        <div class="controls">
+          <button onclick="backward()">⏪ 10s</button>
+          <button onclick="forward()">10s ⏩</button>
+        </div>
+      </div>
 
-<div class="video-wrapper">
-  <video id="player" controls preload="auto">
-    Your browser does not support the video tag.
-  </video>
-  <div class="controls">
-    <button onclick="backward()">⏪ 10s</button>
-    <button onclick="forward()">10s ⏩</button>
-  </div>
-</div>
+      <script>
+        var video = document.getElementById("player");
 
-<script>
-var video = document.getElementById("player");
+        // Use proxy endpoint
+        video.src = "/api/proxy?url=" + encodeURIComponent("${videoUrl}");
+        video.addEventListener("canplay", function(){
+          video.play();
+        });
 
-// Use proxy endpoint to support all kinds of links
-video.src = "/api/proxy?url=" + encodeURIComponent("${videoUrl}");
-video.addEventListener("canplay", function(){
-  video.play();
-});
+        function forward(){ video.currentTime += 10; }
+        function backward(){ video.currentTime -= 10; }
 
-// 10 sec forward/backward
-function forward(){ video.currentTime += 10; }
-function backward(){ video.currentTime -= 10; }
+        document.addEventListener("keydown", function(e){
+          if(e.keyCode === 39){ forward(); }
+          if(e.keyCode === 37){ backward(); }
+        });
+      </script>
 
-// TV Remote Support
-document.addEventListener("keydown", function(e){
-  if(e.keyCode === 39){ forward(); }
-  if(e.keyCode === 37){ backward(); }
-});
-</script>
-
-<div class="footer">Use TV remote ◀ ▶ for 10s skip</div>
-</body>
-</html>
-`);
+      <div class="footer">Use TV remote ◀ ▶ for 10s skip</div>
+    </body>
+    </html>
+  `);
 }
