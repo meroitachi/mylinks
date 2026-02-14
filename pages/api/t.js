@@ -20,226 +20,232 @@ export default async function handler(req, res) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Premium Stream</title>
+    <title>Stream HD</title>
     <style>
         :root {
-            --primary: #3498db;
-            --glass: rgba(255, 255, 255, 0.1);
-            --glass-heavy: rgba(0, 0, 0, 0.7);
+            --accent: #00d2ff;
+            --bg: #050505;
+            --ui-bg: rgba(0, 0, 0, 0.85);
         }
 
-        body {
-            margin: 0;
-            padding: 0;
-            background: radial-gradient(circle at center, #1a1a2e 0%, #0a0a0b 100%);
+        body, html {
+            margin: 0; padding: 0;
+            background: var(--bg);
+            height: 100%; width: 100%;
+            overflow: hidden;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        /* Video Container */
+        .viewport {
+            position: relative;
+            width: 100vw;
             height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            overflow: hidden;
-            color: white;
-        }
-
-        .player-container {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            group: hover;
         }
 
         video {
             width: 100%;
             height: 100%;
-            object-fit: contain;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            background: #000;
         }
 
-        /* Overlay UI */
-        .ui-overlay {
+        /* Cinematic Overlay */
+        .overlay {
             position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            top: 0;
+            inset: 0;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
-            padding: 40px;
-            background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 40%, transparent 60%, rgba(0,0,0,0.6) 100%);
-            transition: opacity 0.5s ease;
+            justify-content: flex-end;
+            padding: 5% 8%; /* TV Safe Area */
+            background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 50%);
+            transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 10;
         }
 
-        .ui-hide { opacity: 0; cursor: none; }
+        .overlay.hidden { opacity: 0; cursor: none; }
 
-        .top-info h1 {
-            margin: 0;
-            font-weight: 300;
-            letter-spacing: 2px;
-            font-size: 1.5rem;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        .title-area {
+            position: absolute;
+            top: 40px;
+            left: 8%;
         }
 
-        .controls-cluster {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 20px;
-            width: 100%;
-            max-width: 900px;
-            margin: 0 auto;
-        }
-
-        .progress-container {
-            width: 100%;
-            height: 6px;
-            background: rgba(255,255,255,0.2);
-            border-radius: 10px;
-            cursor: pointer;
-            position: relative;
-        }
-
-        .progress-bar {
-            height: 100%;
-            background: var(--primary);
-            border-radius: 10px;
-            width: 0%;
-            box-shadow: 0 0 15px var(--primary);
-        }
-
-        .button-row {
-            display: flex;
-            align-items: center;
-            gap: 30px;
-        }
-
-        .btn {
-            background: var(--glass);
-            border: 1px solid rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
+        .title-area h1 {
             color: white;
-            padding: 15px 25px;
-            border-radius: 50px;
+            font-size: 28px;
+            font-weight: 300;
+            margin: 0;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+        }
+
+        .status-badge {
+            display: inline-block;
+            background: var(--accent);
+            color: black;
+            padding: 2px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        /* Modern Progress Bar */
+        .timeline-container {
+            width: 100%;
+            height: 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            margin-bottom: 25px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #00d2ff, #3a7bd5);
+            box-shadow: 0 0 15px var(--accent);
+            transition: width 0.1s linear;
+        }
+
+        /* Large TV Controls */
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+        }
+
+        .nav-btn {
+            background: var(--ui-bg);
+            border: 2px solid transparent;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-size: 20px;
             cursor: pointer;
-            transition: all 0.2s;
-            font-size: 1.2rem;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+
+        /* Focus state for TV Remotes */
+        .nav-btn:focus, .nav-btn:hover {
+            border-color: var(--accent);
+            transform: scale(1.1);
+            box-shadow: 0 0 25px rgba(0, 210, 255, 0.4);
+            background: white;
+            color: black;
+        }
+
+        .play-pause {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
+            font-size: 30px;
         }
 
-        .btn:hover {
-            background: rgba(255,255,255,0.2);
-            transform: scale(1.1);
+        .time-display {
+            color: rgba(255,255,255,0.6);
+            font-variant-numeric: tabular-nums;
+            font-size: 18px;
+            margin-left: auto;
         }
 
-        .btn-play {
-            width: 70px;
-            height: 70px;
-            background: white;
-            color: black;
-            border-radius: 50%;
-        }
-
-        .hint {
-            font-size: 0.8rem;
-            opacity: 0.5;
-            margin-top: 10px;
-        }
     </style>
 </head>
 <body>
 
-<div class="player-container" id="container">
-    <video id="player" playsinline>
+<div class="viewport" id="wrapper">
+    <video id="v" preload="auto">
         <source src="${videoUrl}" type="video/mp4">
     </video>
 
-    <div class="ui-overlay" id="ui">
-        <div class="top-info">
-            <h1>NOW PLAYING</h1>
+    <div class="overlay" id="hud">
+        <div class="title-area">
+            <span class="status-badge">LIVE HD</span>
+            <h1>Streaming Session</h1>
         </div>
 
-        <div class="controls-cluster">
-            <div class="progress-container" onclick="seek(event)">
-                <div class="progress-bar" id="progress"></div>
-            </div>
+        <div class="timeline-container">
+            <div class="progress-fill" id="pBar"></div>
+        </div>
+
+        <div class="controls">
+            <button class="nav-btn" onclick="rw()">⏪ 10s</button>
+            <button class="nav-btn play-pause" id="playBtn" onclick="toggle()">▶</button>
+            <button class="nav-btn" onclick="ff()">10s ⏩</button>
             
-            <div class="button-row">
-                <button class="btn" onclick="skip(-10)">⏪ 10s</button>
-                <button class="btn btn-play" id="playBtn" onclick="togglePlay()">▶</button>
-                <button class="btn" onclick="skip(10)">10s ⏩</button>
+            <div class="time-display">
+                <span id="cur">0:00</span> / <span id="dur">0:00</span>
             </div>
-            <div class="hint">Use Arrow Keys to Seek • Space to Pause</div>
         </div>
     </div>
 </div>
 
 <script>
-    const video = document.getElementById('player');
-    const ui = document.getElementById('ui');
-    const progress = document.getElementById('progress');
+    const v = document.getElementById('v');
+    const hud = document.getElementById('hud');
+    const pBar = document.getElementById('pBar');
     const playBtn = document.getElementById('playBtn');
-    let uiTimeout;
+    const curTxt = document.getElementById('cur');
+    const durTxt = document.getElementById('dur');
+    
+    let timer;
 
-    // Toggle Play/Pause
-    function togglePlay() {
-        if (video.paused) {
-            video.play();
-            playBtn.innerHTML = '⏸';
-        } else {
-            video.pause();
-            playBtn.innerHTML = '▶';
+    function toggle() {
+        if (v.paused) { v.play(); playBtn.innerHTML = '⏸'; }
+        else { v.pause(); playBtn.innerHTML = '▶'; }
+        wake();
+    }
+
+    function ff() { v.currentTime += 10; wake(); }
+    function rw() { v.currentTime -= 10; wake(); }
+
+    function wake() {
+        hud.classList.remove('hidden');
+        clearTimeout(timer);
+        if (!v.paused) {
+            timer = setTimeout(() => hud.classList.add('hidden'), 4000);
         }
     }
 
-    function skip(amount) {
-        video.currentTime += amount;
-        showUI();
+    function fmt(s) {
+        const m = Math.floor(s / 60);
+        s = Math.floor(s % 60);
+        return m + ":" + (s < 10 ? '0' : '') + s;
     }
 
-    // Progress Bar Update
-    video.addEventListener('timeupdate', () => {
-        const percentage = (video.currentTime / video.duration) * 100;
-        progress.style.width = percentage + '%';
-    });
+    v.ontimeupdate = () => {
+        const pc = (v.currentTime / v.duration) * 100;
+        pBar.style.width = pc + '%';
+        curTxt.innerText = fmt(v.currentTime);
+        if(!isNaN(v.duration)) durTxt.innerText = fmt(v.duration);
+    };
 
-    // Seek on click
-    function seek(e) {
-        const rect = e.target.getBoundingClientRect();
-        const pos = (e.clientX - rect.left) / rect.width;
-        video.currentTime = pos * video.duration;
-    }
-
-    // Auto-hide UI logic
-    function showUI() {
-        ui.classList.remove('ui-hide');
-        clearTimeout(uiTimeout);
-        uiTimeout = setTimeout(() => {
-            if (!video.paused) ui.classList.add('ui-hide');
-        }, 3000);
-    }
-
-    document.addEventListener('mousemove', showUI);
-    
-    // Keyboard Shortcuts
+    // TV Remote Key Support
     document.addEventListener('keydown', (e) => {
-        showUI();
-        if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
-        if (e.code === 'ArrowRight') skip(10);
-        if (e.code === 'ArrowLeft') skip(-10);
-        if (e.code === 'KeyF') video.requestFullscreen();
+        wake();
+        switch(e.keyCode) {
+            case 13: toggle(); break; // OK / Enter
+            case 37: rw(); break;     // Left
+            case 39: ff(); break;     // Right
+            case 32: toggle(); break; // Space
+        }
     });
 
-    // Auto-play
-    video.addEventListener('canplay', () => {
-        // Most browsers block autoplay without interaction, 
-        // but it will trigger once the user interacts with the UI.
-    });
+    document.addEventListener('mousemove', wake);
+    
+    // Initial Focus for TV
+    window.onload = () => {
+        playBtn.focus();
+        wake();
+    };
 </script>
 
 </body>
