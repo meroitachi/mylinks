@@ -20,229 +20,232 @@ export default async function handler(req, res) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Premium TV Stream</title>
+    <title>Cinema Premium</title>
     <style>
         :root {
             --accent: #00d2ff;
-            --glass: rgba(255, 255, 255, 0.08);
-            --glass-border: rgba(255, 255, 255, 0.15);
-            --bg-dark: #050505;
+            --glass: rgba(15, 15, 20, 0.75);
+            --border: rgba(255, 255, 255, 0.12);
+            --text-main: #ffffff;
+            --text-dim: rgba(255, 255, 255, 0.6);
         }
 
         body, html {
             margin: 0; padding: 0;
-            background: var(--bg-dark);
+            background: #000;
             height: 100vh; width: 100vw;
             display: flex; align-items: center; justify-content: center;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            overflow: hidden; color: white;
+            font-family: 'Inter', -apple-system, system-ui, sans-serif;
+            overflow: hidden; color: var(--text-main);
         }
 
-        .video-container {
+        .main-wrapper {
             position: relative;
             width: 100%; height: 100%;
-            background: black;
             display: flex; align-items: center; justify-content: center;
         }
 
-        video { width: 100%; height: 100%; object-fit: contain; }
+        video { width: 100%; height: 100%; object-fit: contain; z-index: 1; }
 
-        /* Cinematic Overlay */
-        .overlay {
+        /* The Docked Bottom UI */
+        .bottom-ui {
             position: absolute;
-            inset: 0;
-            display: flex; flex-direction: column;
-            justify-content: flex-end;
-            padding: 60px;
-            background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 50%);
-            transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            bottom: 0; left: 0; right: 0;
+            padding: 40px 60px 50px 60px;
+            background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.4) 60%, transparent 100%);
             z-index: 10;
+            transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.4s ease;
         }
 
-        .hidden { opacity: 0; cursor: none; }
+        .hidden { transform: translateY(100%); opacity: 0; cursor: none; }
 
-        /* Control Cluster */
-        .controls-main {
-            display: flex; flex-direction: column;
-            align-items: center; gap: 35px;
-            width: 100%; max-width: 1000px; margin: 0 auto;
+        /* Progress Area */
+        .progress-container {
+            margin-bottom: 25px;
+            display: flex; align-items: center; gap: 20px;
         }
 
-        /* Progress Bar */
-        .progress-wrapper {
-            width: 100%; height: 8px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 20px; cursor: pointer;
-            overflow: hidden; position: relative;
+        .progress-rail {
+            flex-grow: 1; height: 6px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 10px; cursor: pointer;
+            position: relative; overflow: hidden;
         }
-        .progress-fill {
+
+        .progress-bar {
             height: 100%; width: 0%;
-            background: linear-gradient(90deg, var(--accent), #3a7bd5);
-            box-shadow: 0 0 20px rgba(0, 210, 255, 0.6);
+            background: var(--accent);
+            box-shadow: 0 0 15px var(--accent);
+            border-radius: 10px;
             transition: width 0.1s linear;
         }
 
-        /* Button Styling */
-        .button-group {
-            display: flex; align-items: center; gap: 40px;
+        .time-display { font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; width: 120px; }
+
+        /* Button Layout */
+        .controls-row {
+            display: flex; align-items: center; justify-content: space-between;
         }
 
-        .btn-circle {
+        .btn-stack { display: flex; align-items: center; gap: 15px; }
+
+        /* Unique Button Styles */
+        .icon-btn {
             background: var(--glass);
-            border: 1px solid var(--glass-border);
-            backdrop-filter: blur(15px);
+            border: 1px solid var(--border);
+            backdrop-filter: blur(20px);
             color: white;
+            padding: 14px;
+            border-radius: 16px;
             cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex; align-items: center; justify-content: center;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
 
-        .btn-small { width: 65px; height: 65px; border-radius: 50%; font-size: 1.2rem; }
-        .btn-play { 
-            width: 90px; height: 90px; border-radius: 50%; 
-            font-size: 2rem; background: white; color: black; border: none;
-            box-shadow: 0 0 30px rgba(255,255,255,0.2);
-        }
+        .icon-btn svg { width: 24px; height: 24px; fill: currentColor; }
 
-        .btn-speed {
-            padding: 10px 20px; border-radius: 30px; font-weight: bold;
-            letter-spacing: 1px; font-size: 0.9rem; min-width: 80px;
-        }
-
-        .btn-circle:hover, .btn-circle:focus {
-            transform: scale(1.15);
-            background: rgba(255,255,255,0.2);
-            border-color: var(--accent);
+        .icon-btn:hover, .icon-btn:focus {
+            background: var(--accent);
+            color: #000;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 210, 255, 0.3);
             outline: none;
         }
 
-        .btn-play:hover { transform: scale(1.1); background: #eee; }
-
-        .title-tag {
-            position: absolute; top: 40px; left: 60px;
-            font-size: 0.8rem; letter-spacing: 4px; opacity: 0.5;
+        .play-main {
+            padding: 18px 40px;
+            background: white;
+            color: black;
+            border-radius: 18px;
+            font-size: 1.8rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
         }
 
-        /* Speed Badge */
-        .speed-val { color: var(--accent); }
+        .play-main:hover { transform: scale(1.05); background: var(--accent); }
+
+        .speed-badge {
+            font-size: 12px; font-weight: 800; border: 2px solid white;
+            padding: 2px 6px; border-radius: 6px;
+        }
+
+        /* Download Link Hidden Utility */
+        #downloadLink { display: none; }
     </style>
 </head>
 <body>
 
-<div class="video-container" id="container">
-    <video id="player" preload="auto">
+<div class="main-wrapper" id="shell">
+    <video id="player" playsinline>
         <source src="${videoUrl}" type="video/mp4">
     </video>
 
-    <div class="overlay" id="overlay">
-        <div class="title-tag">PREMIUM 4K STREAM</div>
+    <div class="bottom-ui" id="controls">
+        <div class="progress-container">
+            <span class="time-display" id="currentTime">00:00</span>
+            <div class="progress-rail" onclick="seek(event)">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <span class="time-display" id="totalTime">00:00</span>
+        </div>
 
-        <div class="controls-main">
-            <div class="progress-wrapper" onclick="seek(event)">
-                <div class="progress-fill" id="progressFill"></div>
+        <div class="controls-row">
+            <div class="btn-stack">
+                <button class="icon-btn" onclick="cycleSpeed()" title="Speed">
+                    <span id="speedVal" class="speed-badge">1.0</span>
+                </button>
+                <button class="icon-btn" onclick="skip(-10)">
+                    <svg viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8zM11 10h-1v1h1v-1zm2 0h-1v1h1v-1zm-3 2h1v1h-1v-1zm2 0h1v1h-1v-1z"/></svg>
+                </button>
             </div>
 
-            <div class="button-group">
-                <button class="btn-circle btn-speed" onclick="cycleSpeed()">
-                    <span id="speedTxt">1.0</span>x
-                </button>
+            <button class="play-main" id="playBtn" onclick="togglePlay()">▶</button>
 
-                <button class="btn-circle btn-small" onclick="skip(-10)">
-                   <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M12.5 5.5v13L3 12l9.5-6.5zM21 5.5v13L11.5 12 21 5.5z"/></svg>
+            <div class="btn-stack">
+                <button class="icon-btn" onclick="skip(10)">
+                    <svg viewBox="0 0 24 24"><path d="M12 5V1l5 5-5 5V7c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6h2c0 4.42-3.58 8-8 8s-8-3.58-8-8 3.58-8 8-8z"/></svg>
                 </button>
-
-                <button class="btn-circle btn-play" id="playBtn" onclick="togglePlay()">▶</button>
-
-                <button class="btn-circle btn-small" onclick="skip(10)">
-                   <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M11.5 18.5v-13L21 12l-9.5 6.5zM3 18.5v-13L12.5 12 3 18.5z"/></svg>
+                <button class="icon-btn" onclick="downloadVideo()" title="Download">
+                    <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
                 </button>
-                
-                <button class="btn-circle btn-small" onclick="toggleFS()">
-                   <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+                <button class="icon-btn" onclick="toggleFS()">
+                    <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
                 </button>
             </div>
         </div>
     </div>
 </div>
 
+<a id="downloadLink" href="${videoUrl}" download="video.mp4"></a>
+
 <script>
     const video = document.getElementById('player');
-    const overlay = document.getElementById('overlay');
-    const progressFill = document.getElementById('progressFill');
+    const controls = document.getElementById('controls');
+    const progressBar = document.getElementById('progressBar');
     const playBtn = document.getElementById('playBtn');
-    const speedTxt = document.getElementById('speedTxt');
-    let hideTimer;
+    const curTimeTxt = document.getElementById('currentTime');
+    const totTimeTxt = document.getElementById('totalTime');
+    const speedVal = document.getElementById('speedVal');
+    let timer;
 
-    // Playback Logic
+    function formatTime(seconds) {
+        let h = Math.floor(seconds / 3600);
+        let m = Math.floor((seconds % 3600) / 60);
+        let s = Math.floor(seconds % 60);
+        return (h > 0 ? h + ":" : "") + (m < 10 ? "0" + m : m) + ":" + (s < 10 ? "0" + s : s);
+    }
+
     function togglePlay() {
-        if (video.paused) {
-            video.play();
-            playBtn.innerHTML = '⏸';
-        } else {
-            video.pause();
-            playBtn.innerHTML = '▶';
-        }
-        resetTimer();
+        video.paused ? (video.play(), playBtn.innerText = '⏸') : (video.pause(), playBtn.innerText = '▶');
+        wakeUI();
     }
 
-    function skip(sec) {
-        video.currentTime += sec;
-        resetTimer();
-    }
+    function skip(val) { video.currentTime += val; wakeUI(); }
 
     function cycleSpeed() {
-        const speeds = [1, 1.25, 1.5, 2];
-        let current = speeds.indexOf(video.playbackRate);
-        let next = speeds[(current + 1) % speeds.length];
-        video.playbackRate = next;
-        speedTxt.innerText = next;
-        resetTimer();
+        const s = [1, 1.25, 1.5, 2];
+        let n = s[(s.indexOf(video.playbackRate) + 1) % s.length];
+        video.playbackRate = n;
+        speedVal.innerText = n;
+        wakeUI();
+    }
+
+    function downloadVideo() {
+        document.getElementById('downloadLink').click();
     }
 
     function toggleFS() {
-        if (!document.fullscreenElement) {
-            document.getElementById('container').requestFullscreen();
-        } else {
-            document.exitFullscreen();
-        }
+        if (!document.fullscreenElement) document.getElementById('shell').requestFullscreen();
+        else document.exitFullscreen();
     }
 
-    // Progress
     video.addEventListener('timeupdate', () => {
-        const pct = (video.currentTime / video.duration) * 100;
-        progressFill.style.width = pct + '%';
+        progressBar.style.width = (video.currentTime / video.duration) * 100 + '%';
+        curTimeTxt.innerText = formatTime(video.currentTime);
+        totTimeTxt.innerText = formatTime(video.duration || 0);
     });
 
     function seek(e) {
         const rect = e.currentTarget.getBoundingClientRect();
-        const pos = (e.clientX - rect.left) / rect.width;
-        video.currentTime = pos * video.duration;
+        video.currentTime = ((e.clientX - rect.left) / rect.width) * video.duration;
     }
 
-    // Auto-hide UI
-    function resetTimer() {
-        overlay.classList.remove('hidden');
-        clearTimeout(hideTimer);
-        if (!video.paused) {
-            hideTimer = setTimeout(() => overlay.classList.add('hidden'), 3500);
-        }
+    function wakeUI() {
+        controls.classList.remove('hidden');
+        clearTimeout(timer);
+        if (!video.paused) timer = setTimeout(() => controls.classList.add('hidden'), 4000);
     }
 
-    // TV Remote Support (Arrows + Enter)
+    // TV Remote & Keys
     document.addEventListener('keydown', (e) => {
-        resetTimer();
-        switch(e.key) {
-            case 'ArrowRight': skip(10); break;
-            case 'ArrowLeft': skip(-10); break;
-            case 'Enter': 
-            case ' ': togglePlay(); break;
-            case 'f': toggleFS(); break;
-        }
+        wakeUI();
+        if (e.key === 'ArrowRight') skip(10);
+        if (e.key === 'ArrowLeft') skip(-10);
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); togglePlay(); }
     });
 
-    window.addEventListener('mousemove', resetTimer);
-    window.addEventListener('touchstart', resetTimer);
+    ['mousemove', 'touchstart', 'click'].forEach(ev => window.addEventListener(ev, wakeUI));
 </script>
 
 </body>
