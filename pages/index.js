@@ -15,8 +15,9 @@ export default function Home() {
   };
 
   useEffect(() => {
-  fetchLinks();
-}, []);
+    fetchLinks();
+  }, []);
+
   const addLink = async (e) => {
     e.preventDefault();
     if (!title || !url) return;
@@ -48,7 +49,6 @@ export default function Home() {
   };
 
   const openLink = (linkUrl) => {
-    // Ensure URL starts with http/https
     if (!/^https?:\/\//i.test(linkUrl)) {
       linkUrl = "https://" + linkUrl;
     }
@@ -56,23 +56,27 @@ export default function Home() {
   };
 
   return (
-    <div style={{ fontFamily: "Inter, sans-serif", background: "#f1f5f9", padding: 20 }}>
+    <div
+      style={{
+        fontFamily: "Inter, sans-serif",
+        background: "linear-gradient(135deg,#eef2ff,#f8fafc)",
+        padding: 20,
+        minHeight: "100vh",
+      }}
+    >
       <div
         style={{
           maxWidth: 750,
           margin: "auto",
           background: "white",
           padding: "35px 32px",
-          borderRadius: 18,
-          boxShadow: "0 15px 30px rgba(0,0,0,0.08)",
+          borderRadius: 22,
+          boxShadow: "0 20px 45px rgba(0,0,0,0.08)",
         }}
       >
-        <h1 style={{ textAlign: "center", fontSize: 34, fontWeight: 800, marginBottom: 8 }}>
+        <h1 style={{ textAlign: "center", fontSize: 34, fontWeight: 800 }}>
           My Links
         </h1>
-        <div style={{ textAlign: "center", color: "#6b7280", marginBottom: 28, fontSize: 15 }}>
-          Store & manage your links instantly (MongoDB sync).
-        </div>
 
         {/* Input Form */}
         <form
@@ -80,13 +84,14 @@ export default function Home() {
           style={{
             display: "flex",
             flexDirection: "column",
-            gap: 12,
+            gap: 14,
             marginBottom: 32,
-            padding: 18,
-            background: "rgba(241,245,249,0.6)",
-            borderRadius: 14,
+            padding: 20,
+            background: "rgba(255,255,255,0.7)",
+            borderRadius: 18,
             border: "1px solid #e2e8f0",
-            backdropFilter: "blur(6px)",
+            backdropFilter: "blur(10px)",
+            boxShadow: "0 8px 25px rgba(37,99,235,0.06)",
           }}
         >
           <input
@@ -95,14 +100,11 @@ export default function Home() {
             placeholder="Link Title"
             style={{
               padding: 15,
-              borderRadius: 12,
-              border: "1px solid #ccd4e0",
+              borderRadius: 14,
+              border: "1px solid #dbeafe",
               fontSize: 16,
               outline: "none",
-              transition: "0.2s",
             }}
-            onFocus={(e) => (e.target.style.borderColor = "#2563eb")}
-            onBlur={(e) => (e.target.style.borderColor = "#ccd4e0")}
           />
 
           <input
@@ -111,30 +113,32 @@ export default function Home() {
             placeholder="https://example.com"
             style={{
               padding: 15,
-              borderRadius: 12,
-              border: "1px solid #ccd4e0",
+              borderRadius: 14,
+              border: "1px solid #dbeafe",
               fontSize: 16,
               outline: "none",
-              transition: "0.2s",
             }}
-            onFocus={(e) => (e.target.style.borderColor = "#2563eb")}
-            onBlur={(e) => (e.target.style.borderColor = "#ccd4e0")}
           />
 
           <button
             style={{
               padding: 16,
-              background: "#2563eb",
+              background: "linear-gradient(135deg,#3b82f6,#6366f1)",
               color: "white",
               border: "none",
-              borderRadius: 14,
+              borderRadius: 16,
               fontSize: 17,
               fontWeight: 700,
               cursor: "pointer",
-              transition: "0.2s",
+              boxShadow: "0 6px 18px rgba(59,130,246,0.3)",
+              transition: "0.25s",
             }}
-            onMouseEnter={(e) => (e.target.style.background = "#1d4ed8")}
-            onMouseLeave={(e) => (e.target.style.background = "#2563eb")}
+            onMouseEnter={(e) =>
+              (e.target.style.transform = "translateY(-2px)")
+            }
+            onMouseLeave={(e) =>
+              (e.target.style.transform = "translateY(0px)")
+            }
           >
             + Add Link
           </button>
@@ -155,35 +159,59 @@ export default function Home() {
                   justifyContent: "space-between",
                   alignItems: "center",
                   padding: 18,
-                  background: "#f8fafc",
-                  borderRadius: 12,
-                  marginBottom: 12,
+                  background: "linear-gradient(145deg,#ffffff,#f1f5f9)",
+                  borderRadius: 16,
+                  marginBottom: 14,
                   border: "1px solid #e2e8f0",
-                  transition: "0.15s",
+                  transition: "0.2s",
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.08)")}
-                onMouseLeave={(e) => (e.currentTarget.style.boxShadow = "none")}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.boxShadow =
+                    "0 10px 25px rgba(0,0,0,0.08)")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.boxShadow = "none")
+                }
               >
-                <div>
-                  <div style={{ fontSize: 18, fontWeight: 600 }}>{link.title}</div>
-                  <div style={{ color: "#64748b", fontSize: 13, marginTop: 3 }}>{link.url}</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div
+                    style={{
+                      fontSize: 18,
+                      fontWeight: 600,
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                    }}
+                  >
+                    {link.title}
+                  </div>
+
+                  <div
+                    style={{
+                      color: "#64748b",
+                      fontSize: 13,
+                      marginTop: 4,
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                    }}
+                  >
+                    {link.url}
+                  </div>
                 </div>
 
-                <div style={{ display: "flex", gap: 10 }}>
+                <div style={{ display: "flex", gap: 10, marginLeft: 12 }}>
                   <button
                     onClick={() => openLink(link.url)}
                     style={{
-                      padding: "10px 22px",
-                      background: "#0ea5e9",
+                      padding: "10px 20px",
+                      background: "#22d3ee",
                       color: "white",
-                      borderRadius: 10,
+                      borderRadius: 14,
                       border: "none",
                       cursor: "pointer",
                       fontWeight: 700,
-                      transition: "0.2s",
                     }}
-                    onMouseEnter={(e) => (e.target.style.background = "#0284c7")}
-                    onMouseLeave={(e) => (e.target.style.background = "#0ea5e9")}
                   >
                     GO
                   </button>
@@ -191,17 +219,14 @@ export default function Home() {
                   <button
                     onClick={() => openDeletePopup(link._id)}
                     style={{
-                      padding: "10px 22px",
-                      background: "#ef4444",
+                      padding: "10px 20px",
+                      background: "#fb7185",
                       color: "white",
-                      borderRadius: 10,
+                      borderRadius: 14,
                       border: "none",
                       cursor: "pointer",
                       fontWeight: 700,
-                      transition: "0.2s",
                     }}
-                    onMouseEnter={(e) => (e.target.style.background = "#dc2626")}
-                    onMouseLeave={(e) => (e.target.style.background = "#ef4444")}
                   >
                     Delete
                   </button>
@@ -218,42 +243,49 @@ export default function Home() {
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(0,0,0,0.55)",
+            background: "rgba(0,0,0,0.4)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            backdropFilter: "blur(4px)",
-            animation: "fadeIn 0.2s",
+            backdropFilter: "blur(6px)",
           }}
         >
           <div
             style={{
-              background: "white",
-              padding: 26,
-              borderRadius: 16,
-              width: 320,
+              background: "linear-gradient(145deg,#ffffff,#f1f5f9)",
+              padding: 30,
+              borderRadius: 24,
+              width: 340,
               textAlign: "center",
-              boxShadow: "0 12px 28px rgba(0,0,0,0.25)",
-              animation: "scaleIn 0.25s",
+              boxShadow: "0 25px 50px rgba(0,0,0,0.25)",
+              animation: "popupScale 0.25s ease",
             }}
           >
-            <div style={{ fontSize: 21, fontWeight: 700 }}>Delete this link?</div>
-            <p style={{ color: "#6b7280", marginTop: 6, marginBottom: 20 }}>
+            <div style={{ fontSize: 22, fontWeight: 700 }}>
+              Delete this link?
+            </div>
+
+            <p style={{ color: "#6b7280", marginTop: 8 }}>
               This action cannot be undone.
             </p>
 
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                marginTop: 20,
+              }}
+            >
               <button
                 onClick={confirmDelete}
                 style={{
-                  background: "#ef4444",
+                  background: "#fb7185",
                   border: "none",
                   color: "white",
-                  padding: "10px 20px",
-                  borderRadius: 10,
+                  padding: "10px 22px",
+                  borderRadius: 14,
                   fontWeight: 600,
                   cursor: "pointer",
-                  transition: "0.2s",
                 }}
               >
                 Delete
@@ -262,14 +294,13 @@ export default function Home() {
               <button
                 onClick={() => setPopupOpen(false)}
                 style={{
-                  background: "#6b7280",
+                  background: "#94a3b8",
                   border: "none",
                   color: "white",
-                  padding: "10px 20px",
-                  borderRadius: 10,
+                  padding: "10px 22px",
+                  borderRadius: 14,
                   fontWeight: 600,
                   cursor: "pointer",
-                  transition: "0.2s",
                 }}
               >
                 Cancel
