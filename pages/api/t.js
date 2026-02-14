@@ -95,7 +95,7 @@ button:active{
 
 <div class="video-wrapper">
   <video id="player" controls preload="auto">
-    Your browser does not support the video tag.
+    <source src="${videoUrl}" type="video/mp4">
   </video>
 
   <div class="controls">
@@ -104,36 +104,34 @@ button:active{
   </div>
 </div>
 
+<div class="footer">Use TV remote ◀ ▶ for 10s skip</div>
+
 <script>
 var video = document.getElementById("player");
 
-// Trick to play any attachment/download link
-fetch("${videoUrl}")
-  .then(res => res.blob())
-  .then(blob => {
-    // Detect MIME type, fallback to video/mp4 if unknown
-    let mime = blob.type || "video/mp4";
-    let url = URL.createObjectURL(blob);
-    video.src = url;
+// 10 sec forward
+function forward(){
+  video.currentTime += 10;
+}
 
-    // Play after loaded
-    video.addEventListener("canplay", function(){
-      video.play();
-    });
-  })
-  .catch(err => {
-    console.error("Failed to load video:", err);
-    alert("Video cannot be played");
-  });
+// 10 sec backward
+function backward(){
+  video.currentTime -= 10;
+}
 
-// 10 sec forward/backward
-function forward(){ video.currentTime += 10; }
-function backward(){ video.currentTime -= 10; }
-
-// TV Remote Support
+// TV Remote Support (Left/Right)
 document.addEventListener("keydown", function(e){
-  if(e.keyCode === 39){ forward(); }
-  if(e.keyCode === 37){ backward(); }
+  if(e.keyCode === 39){ // Right arrow
+    forward();
+  }
+  if(e.keyCode === 37){ // Left arrow
+    backward();
+  }
+});
+
+// Auto play after enough load (TV friendly)
+video.addEventListener("canplaythrough", function(){
+  video.play();
 });
 </script>
 
