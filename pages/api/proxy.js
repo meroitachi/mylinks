@@ -3,36 +3,24 @@ export default async function handler(req, res) {
   if (!videoUrl) return res.status(400).send("No URL provided");
 
   try {
-    // Native fetch in Vercel serverless
     const response = await fetch(videoUrl);
 
-    // Forward headers
+    if (!response.ok) {
+      return res.status(500).send("Failed to fetch video");
+    }
+
     const contentType = response.headers.get("content-type") || "video/mp4";
-    const contentLength = response.headers.get("content-length") || "0";
-
     res.setHeader("Content-Type", contentType);
-    res.setHeader("Content-Length", contentLength);
 
-    // Pipe the streamed response
-    const reader = response.body.getReader();
-    const stream = new ReadableStream({
-      start(controller) {
-        function push() {
-          reader.read().then(({ done, value }) => {
-            if (done) {
-              controller.close();
-              return;
-            }
-            controller.enqueue(value);
-            push();
-          });
-        }
-        push();
-      },
-    });
+    // For TV browsers, allow seeking
+    res.setHeader("Accept-Ranges", "bytes");
 
-    new Response(stream).body.pipeTo(res);
+    // Get full data as ArrayBuffer
+    const buffer = Buffer.from(await response.arrayBuffer());
+    res.setHeader("Content-Length", buffer.length);
+    res.status(200).end(buffer);
   } catch (err) {
+    console.error(err);
     res.status(500).send("Failed to fetch video");
   }
 }
