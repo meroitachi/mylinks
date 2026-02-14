@@ -20,232 +20,200 @@ export default async function handler(req, res) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cinema Premium</title>
+    <title>Cinema TV</title>
     <style>
         :root {
-            --accent: #00d2ff;
-            --glass: rgba(15, 15, 20, 0.75);
-            --border: rgba(255, 255, 255, 0.12);
-            --text-main: #ffffff;
-            --text-dim: rgba(255, 255, 255, 0.6);
+            --accent: #ffffff;
+            --glow: rgba(0, 210, 255, 0.5);
+            --panel: rgba(20, 20, 20, 0.85);
         }
 
         body, html {
-            margin: 0; padding: 0;
-            background: #000;
-            height: 100vh; width: 100vw;
-            display: flex; align-items: center; justify-content: center;
-            font-family: 'Inter', -apple-system, system-ui, sans-serif;
-            overflow: hidden; color: var(--text-main);
-        }
-
-        .main-wrapper {
-            position: relative;
-            width: 100%; height: 100%;
-            display: flex; align-items: center; justify-content: center;
-        }
-
-        video { width: 100%; height: 100%; object-fit: contain; z-index: 1; }
-
-        /* The Docked Bottom UI */
-        .bottom-ui {
-            position: absolute;
-            bottom: 0; left: 0; right: 0;
-            padding: 40px 60px 50px 60px;
-            background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.4) 60%, transparent 100%);
-            z-index: 10;
-            transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.4s ease;
-        }
-
-        .hidden { transform: translateY(100%); opacity: 0; cursor: none; }
-
-        /* Progress Area */
-        .progress-container {
-            margin-bottom: 25px;
-            display: flex; align-items: center; gap: 20px;
-        }
-
-        .progress-rail {
-            flex-grow: 1; height: 6px;
-            background: rgba(255,255,255,0.15);
-            border-radius: 10px; cursor: pointer;
-            position: relative; overflow: hidden;
-        }
-
-        .progress-bar {
-            height: 100%; width: 0%;
-            background: var(--accent);
-            box-shadow: 0 0 15px var(--accent);
-            border-radius: 10px;
-            transition: width 0.1s linear;
-        }
-
-        .time-display { font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; width: 120px; }
-
-        /* Button Layout */
-        .controls-row {
-            display: flex; align-items: center; justify-content: space-between;
-        }
-
-        .btn-stack { display: flex; align-items: center; gap: 15px; }
-
-        /* Unique Button Styles */
-        .icon-btn {
-            background: var(--glass);
-            border: 1px solid var(--border);
-            backdrop-filter: blur(20px);
+            margin: 0; padding: 0; background: #000;
+            height: 100vh; width: 100vw; overflow: hidden;
+            font-family: 'Inter', system-ui, sans-serif;
             color: white;
-            padding: 14px;
-            border-radius: 16px;
-            cursor: pointer;
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .container {
+            position: relative; width: 100%; height: 100%;
             display: flex; align-items: center; justify-content: center;
         }
 
-        .icon-btn svg { width: 24px; height: 24px; fill: currentColor; }
+        video { width: 100%; height: 100%; object-fit: contain; }
 
-        .icon-btn:hover, .icon-btn:focus {
-            background: var(--accent);
-            color: #000;
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0, 210, 255, 0.3);
-            outline: none;
+        /* --- Buffering Animation --- */
+        .buffer-overlay {
+            position: absolute; inset: 0;
+            display: none; align-items: center; justify-content: center;
+            background: rgba(0,0,0,0.2); z-index: 5;
         }
 
-        .play-main {
-            padding: 18px 40px;
-            background: white;
-            color: black;
-            border-radius: 18px;
-            font-size: 1.8rem;
-            border: none;
-            cursor: pointer;
-            transition: all 0.2s ease;
+        .spinner {
+            width: 80px; height: 80px;
+            border: 4px solid rgba(255,255,255,0.1);
+            border-left-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite, glow 2s ease-in-out infinite;
         }
 
-        .play-main:hover { transform: scale(1.05); background: var(--accent); }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes glow { 0%, 100% { box-shadow: 0 0 10px var(--glow); } 50% { box-shadow: 0 0 30px var(--glow); } }
 
-        .speed-badge {
-            font-size: 12px; font-weight: 800; border: 2px solid white;
-            padding: 2px 6px; border-radius: 6px;
+        /* --- Bottom Middle UI --- */
+        .player-ui {
+            position: absolute; bottom: 50px; left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            display: flex; flex-direction: column; align-items: center;
+            gap: 20px; width: 90%; max-width: 800px;
+            padding: 25px; border-radius: 30px;
+            background: var(--panel); backdrop-filter: blur(30px);
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            opacity: 0; z-index: 10;
         }
 
-        /* Download Link Hidden Utility */
-        #downloadLink { display: none; }
+        .player-ui.active { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+        .progress-box { width: 100%; display: flex; align-items: center; gap: 15px; }
+        .rail { flex: 1; height: 6px; background: rgba(255,255,255,0.1); border-radius: 10px; cursor: pointer; overflow: hidden; }
+        .fill { width: 0%; height: 100%; background: white; box-shadow: 0 0 15px white; }
+        .time { font-size: 13px; font-weight: 500; font-variant-numeric: tabular-nums; opacity: 0.8; }
+
+        /* Centered Side-by-Side Buttons */
+        .button-cluster { display: flex; align-items: center; gap: 20px; }
+
+        .btn {
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            color: white; padding: 15px; border-radius: 20px; cursor: pointer;
+            transition: all 0.3s; display: flex; align-items: center; justify-content: center;
+        }
+
+        .btn svg { width: 28px; height: 28px; fill: currentColor; }
+        .btn:hover, .btn:focus { background: white; color: black; transform: scale(1.1); outline: none; }
+
+        .play-btn { width: 80px; height: 80px; border-radius: 50%; background: white; color: black; border: none; }
+        .play-btn svg { width: 35px; height: 35px; }
+
+        .speed-btn { font-weight: 800; font-size: 14px; padding: 15px 25px; }
     </style>
 </head>
 <body>
 
-<div class="main-wrapper" id="shell">
-    <video id="player" playsinline>
+<div class="container" id="shell">
+    <div class="buffer-overlay" id="buffer">
+        <div class="spinner"></div>
+    </div>
+
+    <video id="player" preload="auto">
         <source src="${videoUrl}" type="video/mp4">
     </video>
 
-    <div class="bottom-ui" id="controls">
-        <div class="progress-container">
-            <span class="time-display" id="currentTime">00:00</span>
-            <div class="progress-rail" onclick="seek(event)">
-                <div class="progress-bar" id="progressBar"></div>
+    <div class="player-ui" id="ui">
+        <div class="progress-box">
+            <span class="time" id="cur">00:00</span>
+            <div class="rail" onclick="seek(event)">
+                <div class="fill" id="fill"></div>
             </div>
-            <span class="time-display" id="totalTime">00:00</span>
+            <span class="time" id="dur">00:00</span>
         </div>
 
-        <div class="controls-row">
-            <div class="btn-stack">
-                <button class="icon-btn" onclick="cycleSpeed()" title="Speed">
-                    <span id="speedVal" class="speed-badge">1.0</span>
-                </button>
-                <button class="icon-btn" onclick="skip(-10)">
-                    <svg viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8zM11 10h-1v1h1v-1zm2 0h-1v1h1v-1zm-3 2h1v1h-1v-1zm2 0h1v1h-1v-1z"/></svg>
-                </button>
-            </div>
+        <div class="button-cluster">
+            <button class="btn speed-btn" onclick="cycleSpeed()"><span id="spText">1.0</span>x</button>
+            
+            <button class="btn" onclick="skip(-10)">
+                <svg viewBox="0 0 24 24"><path d="M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z"/></svg>
+            </button>
 
-            <button class="play-main" id="playBtn" onclick="togglePlay()">▶</button>
+            <button class="btn play-btn" id="playBtn" onclick="togglePlay()">
+                <svg id="playIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            </button>
 
-            <div class="btn-stack">
-                <button class="icon-btn" onclick="skip(10)">
-                    <svg viewBox="0 0 24 24"><path d="M12 5V1l5 5-5 5V7c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6h2c0 4.42-3.58 8-8 8s-8-3.58-8-8 3.58-8 8-8z"/></svg>
-                </button>
-                <button class="icon-btn" onclick="downloadVideo()" title="Download">
-                    <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-                </button>
-                <button class="icon-btn" onclick="toggleFS()">
-                    <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
-                </button>
-            </div>
+            <button class="btn" onclick="skip(10)">
+                <svg viewBox="0 0 24 24"><path d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z"/></svg>
+            </button>
+
+            <button class="btn" onclick="downloadVid()">
+                <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+            </button>
         </div>
     </div>
 </div>
 
-<a id="downloadLink" href="${videoUrl}" download="video.mp4"></a>
+<a id="dl" href="${videoUrl}" download style="display:none"></a>
 
 <script>
-    const video = document.getElementById('player');
-    const controls = document.getElementById('controls');
-    const progressBar = document.getElementById('progressBar');
-    const playBtn = document.getElementById('playBtn');
-    const curTimeTxt = document.getElementById('currentTime');
-    const totTimeTxt = document.getElementById('totalTime');
-    const speedVal = document.getElementById('speedVal');
+    const v = document.getElementById('player');
+    const ui = document.getElementById('ui');
+    const fill = document.getElementById('fill');
+    const buffer = document.getElementById('buffer');
+    const playIcon = document.getElementById('playIcon');
+    const spText = document.getElementById('spText');
     let timer;
 
-    function formatTime(seconds) {
-        let h = Math.floor(seconds / 3600);
-        let m = Math.floor((seconds % 3600) / 60);
-        let s = Math.floor(seconds % 60);
-        return (h > 0 ? h + ":" : "") + (m < 10 ? "0" + m : m) + ":" + (s < 10 ? "0" + s : s);
-    }
-
+    // --- State Management ---
     function togglePlay() {
-        video.paused ? (video.play(), playBtn.innerText = '⏸') : (video.pause(), playBtn.innerText = '▶');
-        wakeUI();
+        if (v.paused) {
+            v.play();
+            playIcon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
+        } else {
+            v.pause();
+            playIcon.innerHTML = '<path d="M8 5v14l11-7z"/>';
+        }
+        showUI();
     }
 
-    function skip(val) { video.currentTime += val; wakeUI(); }
+    function skip(s) { v.currentTime += s; showUI(); }
 
     function cycleSpeed() {
-        const s = [1, 1.25, 1.5, 2];
-        let n = s[(s.indexOf(video.playbackRate) + 1) % s.length];
-        video.playbackRate = n;
-        speedVal.innerText = n;
-        wakeUI();
+        const rates = [1, 1.5, 2];
+        v.playbackRate = rates[(rates.indexOf(v.playbackRate) + 1) % rates.length];
+        spText.innerText = v.playbackRate;
+        showUI();
     }
 
-    function downloadVideo() {
-        document.getElementById('downloadLink').click();
-    }
+    function downloadVid() { document.getElementById('dl').click(); }
 
-    function toggleFS() {
-        if (!document.fullscreenElement) document.getElementById('shell').requestFullscreen();
-        else document.exitFullscreen();
-    }
+    // --- Buffering Logic ---
+    v.addEventListener('waiting', () => buffer.style.display = 'flex');
+    v.addEventListener('playing', () => buffer.style.display = 'none');
+    v.addEventListener('canplay', () => buffer.style.display = 'none');
 
-    video.addEventListener('timeupdate', () => {
-        progressBar.style.width = (video.currentTime / video.duration) * 100 + '%';
-        curTimeTxt.innerText = formatTime(video.currentTime);
-        totTimeTxt.innerText = formatTime(video.duration || 0);
+    // --- Progress Update ---
+    v.addEventListener('timeupdate', () => {
+        fill.style.width = (v.currentTime / v.duration * 100) + '%';
+        document.getElementById('cur').innerText = format(v.currentTime);
+        document.getElementById('dur').innerText = format(v.duration || 0);
     });
+
+    function format(s) {
+        const m = Math.floor(s / 60);
+        const sec = Math.floor(s % 60);
+        return m + ":" + (sec < 10 ? "0" + sec : sec);
+    }
 
     function seek(e) {
-        const rect = e.currentTarget.getBoundingClientRect();
-        video.currentTime = ((e.clientX - rect.left) / rect.width) * video.duration;
+        const r = e.currentTarget.getBoundingClientRect();
+        v.currentTime = ((e.clientX - r.left) / r.width) * v.duration;
     }
 
-    function wakeUI() {
-        controls.classList.remove('hidden');
+    // --- Auto-Hide UI ---
+    function showUI() {
+        ui.classList.add('active');
         clearTimeout(timer);
-        if (!video.paused) timer = setTimeout(() => controls.classList.add('hidden'), 4000);
+        if (!v.paused) timer = setTimeout(() => ui.classList.remove('active'), 3000);
     }
 
-    // TV Remote & Keys
-    document.addEventListener('keydown', (e) => {
-        wakeUI();
-        if (e.key === 'ArrowRight') skip(10);
-        if (e.key === 'ArrowLeft') skip(-10);
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); togglePlay(); }
+    ['mousemove', 'keydown', 'touchstart', 'click'].forEach(e => {
+        window.addEventListener(e, showUI);
     });
 
-    ['mousemove', 'touchstart', 'click'].forEach(ev => window.addEventListener(ev, wakeUI));
+    // Remote Shortcuts
+    document.addEventListener('keydown', (e) => {
+        if(e.key === 'ArrowRight') skip(10);
+        if(e.key === 'ArrowLeft') skip(-10);
+        if(e.key === 'Enter') togglePlay();
+    });
 </script>
 
 </body>
