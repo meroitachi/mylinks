@@ -20,232 +20,229 @@ export default async function handler(req, res) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stream HD</title>
+    <title>Premium TV Stream</title>
     <style>
         :root {
             --accent: #00d2ff;
-            --bg: #050505;
-            --ui-bg: rgba(0, 0, 0, 0.85);
+            --glass: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --bg-dark: #050505;
         }
 
         body, html {
             margin: 0; padding: 0;
-            background: var(--bg);
-            height: 100%; width: 100%;
-            overflow: hidden;
+            background: var(--bg-dark);
+            height: 100vh; width: 100vw;
+            display: flex; align-items: center; justify-content: center;
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            overflow: hidden; color: white;
         }
 
-        /* Video Container */
-        .viewport {
+        .video-container {
             position: relative;
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            width: 100%; height: 100%;
+            background: black;
+            display: flex; align-items: center; justify-content: center;
         }
 
-        video {
-            width: 100%;
-            height: 100%;
-            background: #000;
-        }
+        video { width: 100%; height: 100%; object-fit: contain; }
 
         /* Cinematic Overlay */
         .overlay {
             position: absolute;
             inset: 0;
-            display: flex;
-            flex-direction: column;
+            display: flex; flex-direction: column;
             justify-content: flex-end;
-            padding: 5% 8%; /* TV Safe Area */
+            padding: 60px;
             background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 50%);
             transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 10;
         }
 
-        .overlay.hidden { opacity: 0; cursor: none; }
+        .hidden { opacity: 0; cursor: none; }
 
-        .title-area {
-            position: absolute;
-            top: 40px;
-            left: 8%;
+        /* Control Cluster */
+        .controls-main {
+            display: flex; flex-direction: column;
+            align-items: center; gap: 35px;
+            width: 100%; max-width: 1000px; margin: 0 auto;
         }
 
-        .title-area h1 {
-            color: white;
-            font-size: 28px;
-            font-weight: 300;
-            margin: 0;
-            letter-spacing: 1px;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.8);
-        }
-
-        .status-badge {
-            display: inline-block;
-            background: var(--accent);
-            color: black;
-            padding: 2px 10px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: bold;
-            margin-bottom: 8px;
-        }
-
-        /* Modern Progress Bar */
-        .timeline-container {
-            width: 100%;
-            height: 8px;
+        /* Progress Bar */
+        .progress-wrapper {
+            width: 100%; height: 8px;
             background: rgba(255,255,255,0.1);
-            border-radius: 10px;
-            margin-bottom: 25px;
-            position: relative;
-            overflow: hidden;
+            border-radius: 20px; cursor: pointer;
+            overflow: hidden; position: relative;
         }
-
         .progress-fill {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, #00d2ff, #3a7bd5);
-            box-shadow: 0 0 15px var(--accent);
+            height: 100%; width: 0%;
+            background: linear-gradient(90deg, var(--accent), #3a7bd5);
+            box-shadow: 0 0 20px rgba(0, 210, 255, 0.6);
             transition: width 0.1s linear;
         }
 
-        /* Large TV Controls */
-        .controls {
-            display: flex;
-            align-items: center;
-            gap: 25px;
+        /* Button Styling */
+        .button-group {
+            display: flex; align-items: center; gap: 40px;
         }
 
-        .nav-btn {
-            background: var(--ui-bg);
-            border: 2px solid transparent;
+        .btn-circle {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(15px);
             color: white;
-            padding: 15px 30px;
-            border-radius: 12px;
-            font-size: 20px;
             cursor: pointer;
-            transition: all 0.2s ease;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .btn-small { width: 65px; height: 65px; border-radius: 50%; font-size: 1.2rem; }
+        .btn-play { 
+            width: 90px; height: 90px; border-radius: 50%; 
+            font-size: 2rem; background: white; color: black; border: none;
+            box-shadow: 0 0 30px rgba(255,255,255,0.2);
+        }
+
+        .btn-speed {
+            padding: 10px 20px; border-radius: 30px; font-weight: bold;
+            letter-spacing: 1px; font-size: 0.9rem; min-width: 80px;
+        }
+
+        .btn-circle:hover, .btn-circle:focus {
+            transform: scale(1.15);
+            background: rgba(255,255,255,0.2);
+            border-color: var(--accent);
             outline: none;
         }
 
-        /* Focus state for TV Remotes */
-        .nav-btn:focus, .nav-btn:hover {
-            border-color: var(--accent);
-            transform: scale(1.1);
-            box-shadow: 0 0 25px rgba(0, 210, 255, 0.4);
-            background: white;
-            color: black;
+        .btn-play:hover { transform: scale(1.1); background: #eee; }
+
+        .title-tag {
+            position: absolute; top: 40px; left: 60px;
+            font-size: 0.8rem; letter-spacing: 4px; opacity: 0.5;
         }
 
-        .play-pause {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 30px;
-        }
-
-        .time-display {
-            color: rgba(255,255,255,0.6);
-            font-variant-numeric: tabular-nums;
-            font-size: 18px;
-            margin-left: auto;
-        }
-
+        /* Speed Badge */
+        .speed-val { color: var(--accent); }
     </style>
 </head>
 <body>
 
-<div class="viewport" id="wrapper">
-    <video id="v" preload="auto">
+<div class="video-container" id="container">
+    <video id="player" preload="auto">
         <source src="${videoUrl}" type="video/mp4">
     </video>
 
-    <div class="overlay" id="hud">
-        <div class="title-area">
-            <span class="status-badge">LIVE HD</span>
-            <h1>Streaming Session</h1>
-        </div>
+    <div class="overlay" id="overlay">
+        <div class="title-tag">PREMIUM 4K STREAM</div>
 
-        <div class="timeline-container">
-            <div class="progress-fill" id="pBar"></div>
-        </div>
+        <div class="controls-main">
+            <div class="progress-wrapper" onclick="seek(event)">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
 
-        <div class="controls">
-            <button class="nav-btn" onclick="rw()">⏪ 10s</button>
-            <button class="nav-btn play-pause" id="playBtn" onclick="toggle()">▶</button>
-            <button class="nav-btn" onclick="ff()">10s ⏩</button>
-            
-            <div class="time-display">
-                <span id="cur">0:00</span> / <span id="dur">0:00</span>
+            <div class="button-group">
+                <button class="btn-circle btn-speed" onclick="cycleSpeed()">
+                    <span id="speedTxt">1.0</span>x
+                </button>
+
+                <button class="btn-circle btn-small" onclick="skip(-10)">
+                   <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M12.5 5.5v13L3 12l9.5-6.5zM21 5.5v13L11.5 12 21 5.5z"/></svg>
+                </button>
+
+                <button class="btn-circle btn-play" id="playBtn" onclick="togglePlay()">▶</button>
+
+                <button class="btn-circle btn-small" onclick="skip(10)">
+                   <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M11.5 18.5v-13L21 12l-9.5 6.5zM3 18.5v-13L12.5 12 3 18.5z"/></svg>
+                </button>
+                
+                <button class="btn-circle btn-small" onclick="toggleFS()">
+                   <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+                </button>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    const v = document.getElementById('v');
-    const hud = document.getElementById('hud');
-    const pBar = document.getElementById('pBar');
+    const video = document.getElementById('player');
+    const overlay = document.getElementById('overlay');
+    const progressFill = document.getElementById('progressFill');
     const playBtn = document.getElementById('playBtn');
-    const curTxt = document.getElementById('cur');
-    const durTxt = document.getElementById('dur');
-    
-    let timer;
+    const speedTxt = document.getElementById('speedTxt');
+    let hideTimer;
 
-    function toggle() {
-        if (v.paused) { v.play(); playBtn.innerHTML = '⏸'; }
-        else { v.pause(); playBtn.innerHTML = '▶'; }
-        wake();
+    // Playback Logic
+    function togglePlay() {
+        if (video.paused) {
+            video.play();
+            playBtn.innerHTML = '⏸';
+        } else {
+            video.pause();
+            playBtn.innerHTML = '▶';
+        }
+        resetTimer();
     }
 
-    function ff() { v.currentTime += 10; wake(); }
-    function rw() { v.currentTime -= 10; wake(); }
+    function skip(sec) {
+        video.currentTime += sec;
+        resetTimer();
+    }
 
-    function wake() {
-        hud.classList.remove('hidden');
-        clearTimeout(timer);
-        if (!v.paused) {
-            timer = setTimeout(() => hud.classList.add('hidden'), 4000);
+    function cycleSpeed() {
+        const speeds = [1, 1.25, 1.5, 2];
+        let current = speeds.indexOf(video.playbackRate);
+        let next = speeds[(current + 1) % speeds.length];
+        video.playbackRate = next;
+        speedTxt.innerText = next;
+        resetTimer();
+    }
+
+    function toggleFS() {
+        if (!document.fullscreenElement) {
+            document.getElementById('container').requestFullscreen();
+        } else {
+            document.exitFullscreen();
         }
     }
 
-    function fmt(s) {
-        const m = Math.floor(s / 60);
-        s = Math.floor(s % 60);
-        return m + ":" + (s < 10 ? '0' : '') + s;
+    // Progress
+    video.addEventListener('timeupdate', () => {
+        const pct = (video.currentTime / video.duration) * 100;
+        progressFill.style.width = pct + '%';
+    });
+
+    function seek(e) {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const pos = (e.clientX - rect.left) / rect.width;
+        video.currentTime = pos * video.duration;
     }
 
-    v.ontimeupdate = () => {
-        const pc = (v.currentTime / v.duration) * 100;
-        pBar.style.width = pc + '%';
-        curTxt.innerText = fmt(v.currentTime);
-        if(!isNaN(v.duration)) durTxt.innerText = fmt(v.duration);
-    };
+    // Auto-hide UI
+    function resetTimer() {
+        overlay.classList.remove('hidden');
+        clearTimeout(hideTimer);
+        if (!video.paused) {
+            hideTimer = setTimeout(() => overlay.classList.add('hidden'), 3500);
+        }
+    }
 
-    // TV Remote Key Support
+    // TV Remote Support (Arrows + Enter)
     document.addEventListener('keydown', (e) => {
-        wake();
-        switch(e.keyCode) {
-            case 13: toggle(); break; // OK / Enter
-            case 37: rw(); break;     // Left
-            case 39: ff(); break;     // Right
-            case 32: toggle(); break; // Space
+        resetTimer();
+        switch(e.key) {
+            case 'ArrowRight': skip(10); break;
+            case 'ArrowLeft': skip(-10); break;
+            case 'Enter': 
+            case ' ': togglePlay(); break;
+            case 'f': toggleFS(); break;
         }
     });
 
-    document.addEventListener('mousemove', wake);
-    
-    // Initial Focus for TV
-    window.onload = () => {
-        playBtn.focus();
-        wake();
-    };
+    window.addEventListener('mousemove', resetTimer);
+    window.addEventListener('touchstart', resetTimer);
 </script>
 
 </body>
