@@ -7,7 +7,8 @@ export default function Home() {
   const [url, setUrl] = useState("");
   const [popupOpen, setPopupOpen] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
-
+const [imageTitle, setImageTitle] = useState("");
+const [imageFile, setImageFile] = useState(null);
   const fetchLinks = async () => {
     const res = await fetch("/api/links");
     const data = await res.json();
@@ -47,7 +48,46 @@ export default function Home() {
     setDeleteId(null);
     fetchLinks();
   };
+const uploadImage = async (e) => {
+  e.preventDefault();
 
+  if (!imageFile || !imageTitle) return;
+
+  const formData = new FormData();
+
+  formData.append("image", imageFile);
+
+  const uploadRes = await fetch(
+    "/api/upload-image",
+    {
+      method: "POST",
+      body: formData,
+    }
+  );
+
+  const uploadData = await uploadRes.json();
+
+  if (!uploadData.url) {
+    alert("Upload failed");
+    return;
+  }
+
+  await fetch("/api/add", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      title: `IMG:${imageTitle}`,
+      url: uploadData.url,
+    }),
+  });
+
+  setImageTitle("");
+  setImageFile(null);
+
+  fetchLinks();
+};
   const openLink = (linkUrl) => {
     if (!/^https?:\/\//i.test(linkUrl)) {
       linkUrl = "https://" + linkUrl;
@@ -143,7 +183,41 @@ export default function Home() {
             + Add Link
           </button>
         </form>
+<form
+  onSubmit={uploadImage}
+  style={{
+    display: "flex",
+    flexDirection: "column",
+    gap: 14,
+    marginBottom: 32,
+    padding: 20,
+    background: "#fff",
+    borderRadius: 18,
+    border: "1px solid #e2e8f0",
+  }}
+>
+  <h3>Upload Image</h3>
 
+  <input
+    value={imageTitle}
+    onChange={(e) =>
+      setImageTitle(e.target.value)
+    }
+    placeholder="Image Title"
+  />
+
+  <input
+    type="file"
+    accept="image/*"
+    onChange={(e) =>
+      setImageFile(e.target.files[0])
+    }
+  />
+
+  <button type="submit">
+    Upload Image
+  </button>
+</form>
         {/* Links List */}
         <div>
           {links.length === 0 ? (
@@ -151,7 +225,16 @@ export default function Home() {
               No links saved yet.
             </div>
           ) : (
-            links.map((link) => (
+            links.map((link) => {
+  const isImage =
+    link.title.startsWith("IMG:");
+
+  const displayTitle = isImage
+    ? link.title.replace("IMG:", "")
+    : link.title;
+
+  return (
+              
               <div
                 key={link._id}
                 style={{
@@ -183,7 +266,7 @@ export default function Home() {
                       textOverflow: "ellipsis",
                     }}
                   >
-                    {link.title}
+                    {displayTitle}
                   </div>
 
                   <div
@@ -222,7 +305,7 @@ export default function Home() {
     justifyContent: "center",
   }}
 >
-  GO
+  {isImage ? "View Image" : "GO"}
 </a>
 
                   <button
@@ -241,7 +324,8 @@ export default function Home() {
                   </button>
                 </div>
               </div>
-            ))
+            );
+})
           )}
         </div>
       </div>
