@@ -201,20 +201,29 @@ export default function Home() {
                 </div>
 
                 <div style={{ display: "flex", gap: 10, marginLeft: 12 }}>
-                  <button
-                    onClick={() => openLink(link.url)}
-                    style={{
-                      padding: "10px 20px",
-                      background: "#22d3ee",
-                      color: "white",
-                      borderRadius: 14,
-                      border: "none",
-                      cursor: "pointer",
-                      fontWeight: 700,
-                    }}
-                  >
-                    GO
-                  </button>
+                  <a
+  href={
+    /^https?:\/\//i.test(link.url)
+      ? link.url
+      : `https://${link.url}`
+  }
+  target="_blank"
+  rel="noopener noreferrer"
+  style={{
+    padding: "10px 20px",
+    background: "#22d3ee",
+    color: "white",
+    borderRadius: 14,
+    cursor: "pointer",
+    fontWeight: 700,
+    textDecoration: "none",
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+  }}
+>
+  GO
+</a>
 
                   <button
                     onClick={() => openDeletePopup(link._id)}
