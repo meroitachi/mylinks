@@ -20,7 +20,6 @@ export default async function handler(req, res) {
   }
 
   let videoUrl = doc.url;
-
   if (!/^https?:\/\//i.test(videoUrl)) {
     videoUrl = "https://" + videoUrl;
   }
@@ -28,7 +27,7 @@ export default async function handler(req, res) {
   res.setHeader("Content-Type", "text/html");
 
   res.send(`
-<!DOCTYPE html>
+  <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -231,5 +230,5 @@ export default async function handler(req, res) {
 
 </body>
 </html>
-`);
+  `);
 }
