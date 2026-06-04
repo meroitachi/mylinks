@@ -210,110 +210,127 @@ showToast("Image uploaded successfully", "success");
   style={{
     display: "flex",
     flexDirection: "column",
-    gap: 14,
+    gap: 16,
     marginBottom: 32,
-    padding: 22,
-    borderRadius: 18,
-    border: "1px solid #e2e8f0",
-    background: "linear-gradient(145deg,#ffffff,#f8fafc)",
-    boxShadow: "0 10px 30px rgba(0,0,0,0.06)",
+    padding: 24,
+    borderRadius: 20,
+    border: "1px solid rgba(148,163,184,0.3)",
+    background:
+      "linear-gradient(145deg, rgba(255,255,255,0.9), rgba(248,250,252,0.8))",
+    boxShadow: "0 12px 35px rgba(0,0,0,0.08)",
+    backdropFilter: "blur(10px)",
   }}
 >
-  {/* Title */}
-  <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>
+  {/* HEADER */}
+  <h3
+    style={{
+      margin: 0,
+      fontSize: 18,
+      fontWeight: 800,
+      letterSpacing: 0.3,
+      color: "#0f172a",
+    }}
+  >
     Upload Image
   </h3>
 
-  {/* Image title */}
+  {/* TITLE */}
   <input
     value={imageTitle}
     onChange={(e) => setImageTitle(e.target.value)}
-    placeholder="Image Title"
+    placeholder="Enter image title..."
     style={{
       padding: 14,
-      borderRadius: 12,
-      border: "1px solid #dbeafe",
+      borderRadius: 14,
+      border: "1px solid #e2e8f0",
       outline: "none",
       fontSize: 14,
-      background: "#fff",
+      background: "white",
+      transition: "0.2s",
     }}
   />
 
-  {/* File input (styled wrapper) */}
-  <label
+  {/* FILE DROP ZONE */}
+  <div
     style={{
+      padding: 16,
+      borderRadius: 16,
+      border: "2px dashed #93c5fd",
+      background: "#f8fafc",
       display: "flex",
       flexDirection: "column",
-      gap: 8,
-      padding: 14,
-      borderRadius: 12,
-      border: "1px dashed #93c5fd",
-      background: "#f8fafc",
-      cursor: "pointer",
+      gap: 10,
     }}
   >
     <span style={{ fontSize: 13, color: "#64748b" }}>
-      Choose Image File
+      Select image file
     </span>
 
     <input
-  ref={fileInputRef}
-  type="file"
-  accept="image/*"
-  multiple={false}
-  onChange={(e) => {
-    const file = e.target.files[0];
+      ref={fileInputRef}
+      type="file"
+      accept="image/*"
+      multiple={false}
+      onChange={(e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setImageFile(file);
+      }}
+    />
 
-    if (!file) return;
-
-    // force single file
-    setImageFile(file);
-  }}
-/>
-
-    {/* preview file name */}
+    {/* SELECTED FILE */}
     {imageFile && (
-  <div
-    style={{
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "space-between",
-      fontSize: 12,
-      color: "#0f172a",
-      marginTop: 6,
-      padding: "6px 10px",
-      borderRadius: 10,
-      background: "#eef2ff",
-    }}
-  >
-    <span>📎 {imageFile.name}</span>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "10px 12px",
+          borderRadius: 12,
+          background: "#eef2ff",
+          fontSize: 12,
+        }}
+      >
+        <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
+          📎 {imageFile.name}
+        </span>
 
-    <button
-      type="button"
-      onClick={() => {
-        setImageFile(null);
+        {/* BIG CLEAN CANCEL BUTTON */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
 
-        // reset actual file input UI
-        if (fileInputRef.current) {
-          fileInputRef.current.value = "";
-        }
-      }}
-      style={{
-        border: "none",
-        background: "transparent",
-        cursor: "pointer",
-        fontSize: 16,
-        fontWeight: 800,
-        color: "#ef4444",
-      }}
-    >
-      ×
-    </button>
+            setImageFile(null);
+
+            if (fileInputRef.current) {
+              fileInputRef.current.value = "";
+            }
+          }}
+          style={{
+            width: 34,
+            height: 34,
+            borderRadius: 10,
+            border: "none",
+            background: "#ef4444",
+            color: "white",
+            fontSize: 18,
+            fontWeight: 900,
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            boxShadow: "0 4px 10px rgba(239,68,68,0.3)",
+          }}
+        >
+          ×
+        </button>
+      </div>
+    )}
   </div>
-)}
-  </label>
 
-  {/* Upload button */}
+  {/* UPLOAD BUTTON */}
   <button
     type="submit"
     disabled={!imageFile || !imageTitle.trim()}
@@ -321,19 +338,24 @@ showToast("Image uploaded successfully", "success");
       padding: 14,
       borderRadius: 14,
       border: "none",
-      fontWeight: 700,
+      fontWeight: 800,
       fontSize: 15,
-      cursor: imageFile ? "pointer" : "not-allowed",
+      cursor:
+        imageFile && imageTitle.trim() ? "pointer" : "not-allowed",
       background:
-  imageFile && imageTitle.trim()
-    ? "linear-gradient(135deg,#3b82f6,#6366f1)"
-    : "#cbd5e1",
+        imageFile && imageTitle.trim()
+          ? "linear-gradient(135deg,#3b82f6,#6366f1)"
+          : "#cbd5e1",
       color: "white",
-      transition: "0.2s",
-      opacity: imageFile ? 1 : 0.7,
+      opacity: imageFile && imageTitle.trim() ? 1 : 0.7,
+      transition: "0.25s",
+      boxShadow:
+        imageFile && imageTitle.trim()
+          ? "0 8px 20px rgba(59,130,246,0.25)"
+          : "none",
     }}
   >
-    {imageFile ? "Upload Image" : "Select Image First"}
+    {imageFile ? "Upload Image" : "Select File First"}
   </button>
 </form>
         {/* Links List */}
