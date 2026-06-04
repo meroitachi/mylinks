@@ -9,6 +9,7 @@ export default function Home() {
   const [deleteId, setDeleteId] = useState(null);
 const [imageTitle, setImageTitle] = useState("");
 const [imageFile, setImageFile] = useState(null);
+  const [toast, setToast] = useState({ show: false, message: "", type: "" });
   const fetchLinks = async () => {
     const res = await fetch("/api/links");
     const data = await res.json();
@@ -68,25 +69,41 @@ const uploadImage = async (e) => {
   const uploadData = await uploadRes.json();
 
   if (!uploadData.url) {
-    alert("Upload failed");
-    return;
-  }
+  showToast("Upload failed", "error");
+  return;
+}
 
-  await fetch("/api/add", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      title: `IMG:${imageTitle}`,
-      url: uploadData.url,
-    }),
-  });
+await fetch("/api/add", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    title: `IMG:${imageTitle}`,
+    url: uploadData.url,
+  }),
+});
 
-  setImageTitle("");
-  setImageFile(null);
+setImageTitle("");
+setImageFile(null);
 
-  fetchLinks();
+fetchLinks();
+
+showToast("Image uploaded successfully", "success");
+};
+  const showToast = (message, type = "success") => {
+  setToast({ show: true, message, type });
+
+  setTimeout(() => {
+    setToast({ show: false, message: "", type: "" });
+  }, 2500);
+
+  const sound =
+    type === "success"
+      ? new Audio("/sounds/success.mp3")
+      : new Audio("/sounds/error.mp3");
+
+  sound.play().catch(() => {});
 };
   const openLink = (linkUrl) => {
     if (!/^https?:\/\//i.test(linkUrl)) {
@@ -467,6 +484,29 @@ const uploadImage = async (e) => {
           </div>
         </div>
       )}
+
+            {toast.show && (
+  <div
+    style={{
+      position: "fixed",
+      top: 20,
+      right: 20,
+      padding: "12px 18px",
+      borderRadius: 12,
+      color: "white",
+      fontWeight: 600,
+      background:
+        toast.type === "success"
+          ? "linear-gradient(135deg,#22c55e,#16a34a)"
+          : "linear-gradient(135deg,#ef4444,#b91c1c)",
+      boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
+      zIndex: 9999,
+      animation: "fadeIn 0.2s ease",
+    }}
+  >
+    {toast.message}
+  </div>
+)}
     </div>
   );
 }
