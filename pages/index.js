@@ -236,94 +236,88 @@ const uploadImage = async (e) => {
   return (
               
               <div
-                key={link._id}
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  padding: 18,
-                  background: "linear-gradient(145deg,#ffffff,#f1f5f9)",
-                  borderRadius: 16,
-                  marginBottom: 14,
-                  border: "1px solid #e2e8f0",
-                  transition: "0.2s",
-                }}
-                onMouseEnter={(e) =>
-                  (e.currentTarget.style.boxShadow =
-                    "0 10px 25px rgba(0,0,0,0.08)")
-                }
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.boxShadow = "none")
-                }
-              >
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div
-                    style={{
-                      fontSize: 18,
-                      fontWeight: 600,
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                    }}
-                  >
-                    {displayTitle}
-                  </div>
-
-                  <div
-                    style={{
-                      color: "#64748b",
-                      fontSize: 13,
-                      marginTop: 4,
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                    }}
-                  >
-                    {link.url}
-                  </div>
-                </div>
-
-                <div style={{ display: "flex", gap: 10, marginLeft: 12 }}>
-                  <a
-  href={
-    /^https?:\/\//i.test(link.url)
-      ? link.url
-      : `https://${link.url}`
-  }
-  target="_blank"
-  rel="noopener noreferrer"
+  key={link._id}
   style={{
-    padding: "10px 20px",
-    background: "#22d3ee",
-    color: "white",
-    borderRadius: 14,
-    cursor: "pointer",
-    fontWeight: 700,
-    textDecoration: "none",
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
+    padding: 18,
+    background: "linear-gradient(145deg,#ffffff,#f1f5f9)",
+    borderRadius: 16,
+    marginBottom: 14,
+    border: "1px solid #e2e8f0",
+    transition: "0.2s",
   }}
 >
-  {isImage ? "View Image" : "GO"}
-</a>
+  {/* Title */}
+  <div
+    style={{
+      fontSize: 18,
+      fontWeight: 600,
+      marginBottom: 8,
+      wordBreak: "break-word",
+    }}
+  >
+    {displayTitle}
+  </div>
 
-                  <button
-                    onClick={() => openDeletePopup(link._id)}
-                    style={{
-                      padding: "10px 20px",
-                      background: "#fb7185",
-                      color: "white",
-                      borderRadius: 14,
-                      border: "none",
-                      cursor: "pointer",
-                      fontWeight: 700,
-                    }}
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
+  {/* URL */}
+  <div
+    style={{
+      color: "#64748b",
+      fontSize: 13,
+      marginBottom: 14,
+      wordBreak: "break-all",
+    }}
+  >
+    {link.url}
+  </div>
+
+  {/* Buttons */}
+  <div
+    style={{
+      display: "flex",
+      gap: 10,
+      flexWrap: "wrap",
+    }}
+  >
+    <a
+      href={
+        /^https?:\/\//i.test(link.url)
+          ? link.url
+          : `https://${link.url}`
+      }
+      target="_blank"
+      rel="noopener noreferrer"
+      style={{
+        padding: "10px 20px",
+        background: "#22d3ee",
+        color: "white",
+        borderRadius: 14,
+        cursor: "pointer",
+        fontWeight: 700,
+        textDecoration: "none",
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      {isImage ? "View Image" : "GO"}
+    </a>
+
+    <button
+      onClick={() => openDeletePopup(link._id)}
+      style={{
+        padding: "10px 20px",
+        background: "#fb7185",
+        color: "white",
+        borderRadius: 14,
+        border: "none",
+        cursor: "pointer",
+        fontWeight: 700,
+      }}
+    >
+      Delete
+    </button>
+  </div>
+</div>
             );
 })
           )}
