@@ -1,21 +1,42 @@
+import formidable from "formidable";
+import fs from "fs";
+
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+    return res.status(405).json({
+      error: "Method not allowed",
+    });
   }
 
   try {
-    const formData = await req.formData();
+    const form = formidable({});
 
-    const file = formData.get("image");
+    const [fields, files] = await form.parse(req);
 
-    if (!file) {
-      return res.status(400).json({ error: "No image" });
+    const image = files.image?.[0];
+
+    if (!image) {
+      return res.status(400).json({
+        error: "No image uploaded",
+      });
     }
 
-    const bytes = await file.arrayBuffer();
-    const base64 = Buffer.from(bytes).toString("base64");
+    const fileBuffer = fs.readFileSync(
+      image.filepath
+    );
+
+    const base64 = fileBuffer.toString(
+      "base64"
+    );
 
     const body = new FormData();
+
     body.append("image", base64);
 
     const response = await fetch(
@@ -29,13 +50,16 @@ export default async function handler(req, res) {
     const data = await response.json();
 
     if (!data.success) {
-      throw new Error("ImgBB upload failed");
+      return res.status(500).json(data);
     }
 
     return res.status(200).json({
       url: data.data.url,
+      deleteUrl: data.data.delete_url,
     });
   } catch (err) {
+    console.error(err);
+
     return res.status(500).json({
       error: err.message,
     });
