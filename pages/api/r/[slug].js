@@ -1,32 +1,27 @@
-// pages/api/r/[slug].js
 import { connectToDatabase } from "../../../lib/mongo";
 import Link from "../../../models/Link";
 
 export default async function handler(req, res) {
   await connectToDatabase();
 
-  const { slug } = req.query;
+  const slug = req.query.slug; 
+  // slug is array like: ["example"] or undefined
 
-  let targetLink;
+  let query;
 
-  // CASE 1: /api/r  (no slug)
   if (!slug || slug.length === 0) {
-    targetLink = await Link.findOne({ title: /redirect/i });
+    // /api/r → default redirect
+    query = { title: /redirect/i };
+  } else {
+    // /api/r/example → match exact name
+    query = { title: new RegExp(slug[0], "i") };
   }
 
-  // CASE 2: /api/r/example
-  else {
-    const name = Array.isArray(slug) ? slug.join("/") : slug;
+  const redirectLink = await Link.findOne(query);
 
-    targetLink = await Link.findOne({
-      title: new RegExp(name, "i"),
-    });
-  }
+  if (redirectLink && redirectLink.url) {
+    let url = redirectLink.url;
 
-  if (targetLink && targetLink.url) {
-    let url = targetLink.url;
-
-    // ensure http/https
     if (!/^https?:\/\//i.test(url)) {
       url = "https://" + url;
     }
@@ -35,6 +30,5 @@ export default async function handler(req, res) {
     return res.end();
   }
 
-  // fallback if not found
-  return res.status(404).send("Redirect link not found");
+  res.status(404).send("No redirect link found");
 }
