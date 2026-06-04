@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-
+import { useRef } from "react";
 export default function Home() {
   const [links, setLinks] = useState([]);
   const [title, setTitle] = useState("");
@@ -9,6 +9,7 @@ export default function Home() {
   const [deleteId, setDeleteId] = useState(null);
 const [imageTitle, setImageTitle] = useState("");
 const [imageFile, setImageFile] = useState(null);
+  const fileInputRef = useRef(null);
   const [toast, setToast] = useState({ show: false, message: "", type: "" });
   const fetchLinks = async () => {
     const res = await fetch("/api/links");
@@ -86,6 +87,10 @@ await fetch("/api/add", {
 
 setImageTitle("");
 setImageFile(null);
+
+if (fileInputRef.current) {
+  fileInputRef.current.value = "";
+}
 
 fetchLinks();
 
@@ -252,24 +257,66 @@ showToast("Image uploaded successfully", "success");
     </span>
 
     <input
-      type="file"
-      accept="image/*"
-      onChange={(e) => setImageFile(e.target.files[0])}
-      style={{ fontSize: 13 }}
-    />
+  ref={fileInputRef}
+  type="file"
+  accept="image/*"
+  multiple={false}
+  onChange={(e) => {
+    const file = e.target.files[0];
+
+    if (!file) return;
+
+    // force single file
+    setImageFile(file);
+  }}
+/>
 
     {/* preview file name */}
     {imageFile && (
-      <div style={{ fontSize: 12, color: "#0f172a" }}>
-        Selected: {imageFile.name}
-      </div>
-    )}
+  <div
+    style={{
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      fontSize: 12,
+      color: "#0f172a",
+      marginTop: 6,
+      padding: "6px 10px",
+      borderRadius: 10,
+      background: "#eef2ff",
+    }}
+  >
+    <span>📎 {imageFile.name}</span>
+
+    <button
+      type="button"
+      onClick={() => {
+        setImageFile(null);
+
+        // reset actual file input UI
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+      }}
+      style={{
+        border: "none",
+        background: "transparent",
+        cursor: "pointer",
+        fontSize: 16,
+        fontWeight: 800,
+        color: "#ef4444",
+      }}
+    >
+      ×
+    </button>
+  </div>
+)}
   </label>
 
   {/* Upload button */}
   <button
     type="submit"
-    disabled={!imageFile}
+    disabled={!imageFile || !imageTitle.trim()}
     style={{
       padding: 14,
       borderRadius: 14,
@@ -277,9 +324,10 @@ showToast("Image uploaded successfully", "success");
       fontWeight: 700,
       fontSize: 15,
       cursor: imageFile ? "pointer" : "not-allowed",
-      background: imageFile
-        ? "linear-gradient(135deg,#3b82f6,#6366f1)"
-        : "#cbd5e1",
+      background:
+  imageFile && imageTitle.trim()
+    ? "linear-gradient(135deg,#3b82f6,#6366f1)"
+    : "#cbd5e1",
       color: "white",
       transition: "0.2s",
       opacity: imageFile ? 1 : 0.7,
