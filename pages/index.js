@@ -190,32 +190,85 @@ const uploadImage = async (e) => {
     flexDirection: "column",
     gap: 14,
     marginBottom: 32,
-    padding: 20,
-    background: "#fff",
+    padding: 22,
     borderRadius: 18,
     border: "1px solid #e2e8f0",
+    background: "linear-gradient(145deg,#ffffff,#f8fafc)",
+    boxShadow: "0 10px 30px rgba(0,0,0,0.06)",
   }}
 >
-  <h3>Upload Image</h3>
+  {/* Title */}
+  <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>
+    Upload Image
+  </h3>
 
+  {/* Image title */}
   <input
     value={imageTitle}
-    onChange={(e) =>
-      setImageTitle(e.target.value)
-    }
+    onChange={(e) => setImageTitle(e.target.value)}
     placeholder="Image Title"
+    style={{
+      padding: 14,
+      borderRadius: 12,
+      border: "1px solid #dbeafe",
+      outline: "none",
+      fontSize: 14,
+      background: "#fff",
+    }}
   />
 
-  <input
-    type="file"
-    accept="image/*"
-    onChange={(e) =>
-      setImageFile(e.target.files[0])
-    }
-  />
+  {/* File input (styled wrapper) */}
+  <label
+    style={{
+      display: "flex",
+      flexDirection: "column",
+      gap: 8,
+      padding: 14,
+      borderRadius: 12,
+      border: "1px dashed #93c5fd",
+      background: "#f8fafc",
+      cursor: "pointer",
+    }}
+  >
+    <span style={{ fontSize: 13, color: "#64748b" }}>
+      Choose Image File
+    </span>
 
-  <button type="submit">
-    Upload Image
+    <input
+      type="file"
+      accept="image/*"
+      onChange={(e) => setImageFile(e.target.files[0])}
+      style={{ fontSize: 13 }}
+    />
+
+    {/* preview file name */}
+    {imageFile && (
+      <div style={{ fontSize: 12, color: "#0f172a" }}>
+        Selected: {imageFile.name}
+      </div>
+    )}
+  </label>
+
+  {/* Upload button */}
+  <button
+    type="submit"
+    disabled={!imageFile}
+    style={{
+      padding: 14,
+      borderRadius: 14,
+      border: "none",
+      fontWeight: 700,
+      fontSize: 15,
+      cursor: imageFile ? "pointer" : "not-allowed",
+      background: imageFile
+        ? "linear-gradient(135deg,#3b82f6,#6366f1)"
+        : "#cbd5e1",
+      color: "white",
+      transition: "0.2s",
+      opacity: imageFile ? 1 : 0.7,
+    }}
+  >
+    {imageFile ? "Upload Image" : "Select Image First"}
   </button>
 </form>
         {/* Links List */}
