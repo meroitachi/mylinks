@@ -226,99 +226,117 @@ const uploadImage = async (e) => {
             </div>
           ) : (
             links.map((link) => {
-  const isImage =
-    link.title.startsWith("IMG:");
+  const isImage = link.title.startsWith("IMG:");
 
   const displayTitle = isImage
     ? link.title.replace("IMG:", "")
     : link.title;
 
+  // shorten URL (middle cut)
+  const shortUrl =
+    link.url.length > 45
+      ? link.url.slice(0, 25) + "..." + link.url.slice(-15)
+      : link.url;
+
   return (
-              
-              <div
-  key={link._id}
-  style={{
-    padding: 18,
-    background: "linear-gradient(145deg,#ffffff,#f1f5f9)",
-    borderRadius: 16,
-    marginBottom: 14,
-    border: "1px solid #e2e8f0",
-    transition: "0.2s",
-  }}
->
-  {/* Title */}
-  <div
-    style={{
-      fontSize: 18,
-      fontWeight: 600,
-      marginBottom: 8,
-      wordBreak: "break-word",
-    }}
-  >
-    {displayTitle}
-  </div>
-
-  {/* URL */}
-  <div
-    style={{
-      color: "#64748b",
-      fontSize: 13,
-      marginBottom: 14,
-      wordBreak: "break-all",
-    }}
-  >
-    {link.url}
-  </div>
-
-  {/* Buttons */}
-  <div
-    style={{
-      display: "flex",
-      gap: 10,
-      flexWrap: "wrap",
-    }}
-  >
-    <a
-      href={
-        /^https?:\/\//i.test(link.url)
-          ? link.url
-          : `https://${link.url}`
-      }
-      target="_blank"
-      rel="noopener noreferrer"
+    <div
+      key={link._id}
       style={{
-        padding: "10px 20px",
-        background: "#22d3ee",
-        color: "white",
-        borderRadius: 14,
-        cursor: "pointer",
-        fontWeight: 700,
-        textDecoration: "none",
-        display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center",
+        padding: 18,
+        background: "linear-gradient(145deg,#ffffff,#f1f5f9)",
+        borderRadius: 16,
+        marginBottom: 14,
+        border: "1px solid #e2e8f0",
       }}
     >
-      {isImage ? "View Image" : "GO"}
-    </a>
+      {/* TITLE */}
+      <div
+        style={{
+          fontSize: 18,
+          fontWeight: 600,
+          marginBottom: 8,
+          wordBreak: "break-word",
+        }}
+      >
+        {displayTitle}
+      </div>
 
-    <button
-      onClick={() => openDeletePopup(link._id)}
-      style={{
-        padding: "10px 20px",
-        background: "#fb7185",
-        color: "white",
-        borderRadius: 14,
-        border: "none",
-        cursor: "pointer",
-        fontWeight: 700,
-      }}
-    >
-      Delete
-    </button>
-  </div>
-</div>
-            );
+      {/* URL + BUTTONS IN ONE LINE */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 12,
+          flexWrap: "wrap",
+        }}
+      >
+        {/* URL */}
+        <div
+          style={{
+            color: "#64748b",
+            fontSize: 13,
+            flex: 1,
+            minWidth: 0,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {shortUrl}
+        </div>
+
+        {/* BUTTON GROUP */}
+        <div
+          style={{
+            display: "flex",
+            gap: 10,
+            flexShrink: 0,
+          }}
+        >
+          <a
+            href={
+              /^https?:\/\//i.test(link.url)
+                ? link.url
+                : `https://${link.url}`
+            }
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              padding: "8px 16px",
+              background: "#22d3ee",
+              color: "white",
+              borderRadius: 12,
+              fontWeight: 700,
+              textDecoration: "none",
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 13,
+            }}
+          >
+            {isImage ? "View Image" : "GO"}
+          </a>
+
+          <button
+            onClick={() => openDeletePopup(link._id)}
+            style={{
+              padding: "8px 16px",
+              background: "#fb7185",
+              color: "white",
+              borderRadius: 12,
+              border: "none",
+              cursor: "pointer",
+              fontWeight: 700,
+              fontSize: 13,
+            }}
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 })
           )}
         </div>
